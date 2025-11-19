@@ -13,8 +13,7 @@ pip install git+https://github.com/RobGKN/clihelper
 
 ## Setup
 
-On first run, you'll be prompted for your Anthropic API key.
-Get one at: https://console.anthropic.com/settings/keys
+Prompts for an anthropic api key on first run.
 
 ## Usage
 
@@ -56,47 +55,4 @@ listing in ls. You can also use 'tree' for a nicer recursive view.
 ## License
 
 MIT
-```
 
-### Step 7: Create `.gitignore`
-```
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-
-# Virtual Environment
-venv/
-ENV/
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Project specific
-.clihelper_key
-api_key.txt
-*.key
-
-# OS
-.DS_Store
-Thumbs.db
