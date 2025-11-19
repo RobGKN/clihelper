@@ -118,33 +118,18 @@ class CLIHelper:
         return result
     
     def get_recent_history_with_context(self, n=10):
-        """Get recent bash history with limited output context."""
         try:
-            # Get command history
-            history_result = subprocess.run(
-                ['bash', '-i', '-c', f'history {n}'],
-                capture_output=True, text=True, timeout=1
-            )
-            
-            # Get the last command's output (if available)
-            # This is a simplified approach - getting full output history is complex
-            last_cmd_result = subprocess.run(
-                ['bash', '-i', '-c', 'fc -ln -1'],
-                capture_output=True, text=True, timeout=1
-            )
-            
-            history = history_result.stdout
-            last_cmd = last_cmd_result.stdout.strip()
-            
-            context = f"Recent command history:\n{history}\n"
-            
-            if last_cmd:
-                context += f"\nLast command run: {last_cmd}"
-            
+            history_file = Path.home() / ".bash_history"
+            if not history_file.exists():
+                return "No Bash history found."
+
+            # Read last N lines
+            lines = history_file.read_text().splitlines()[-n:]
+            context = "Recent command history:\n" + "\n".join(lines)
             return self.redact_sensitive_info(context)
-            
-        except:
-            return "Could not retrieve command history"
+
+        except Exception as e:
+            return f"Could not retrieve command history: {e}"
     
     def analyze_direct_query(self, query):
         """Handle direct queries without piped input."""
