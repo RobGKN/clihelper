@@ -2,6 +2,9 @@
 
 Simple llm-powered help for command-line errors. provides helpful suggestions based on recent terminal history.
 
+Ask direct queries or pipe outputs from commands that are thowing errors.
+Is aware of recent command history. Automatically redacts sensitive data like passwords and api keys before sending to llm.
+
 ## Installation
 ```bash
 # Install using pipx (recommended)
@@ -22,11 +25,25 @@ Simply pipe any command error to `clihelper`:
 # Basic usage
 ls --fake-flag 2>&1 | clihelper
 
+# Direct query mode - just ask!
+clihelper "how to find large files"
+clihelper "explain the chmod number system"
+clihelper "what git command undoes changes"
+
+# Error analysis mode - pipe errors
+ls --fake-flag 2>&1 | clihelper
+docker rmi 2>&1 | clihelper "trying to remove all images"
+
 # With additional context
 find . -name "*.txt" 2>&1 | clihelper "trying to find all text files"
 
 # Git example
 git psh 2>&1 | clihelper
+
+# Your sensitive data is automatically protected
+echo "password=secret123" | clihelper  # password will be redacted
+
+
 ```
 
 ## Examples
