@@ -11,7 +11,8 @@ from anthropic import Anthropic
 __version__ = "0.2.0"
 
 class CLIHelper:
-    def __init__(self):
+    def __init__(self, debug=False):
+        self.debug = debug
         self.api_key = self.get_or_setup_api_key()
         self.ensure_prompt_command()
         
@@ -161,7 +162,6 @@ Please provide helpful command-line advice. If they're asking about a specific c
 3. Give practical examples
 
 Be concise and practical."""
-
         return self.call_api(prompt)
     
     def analyze_error(self, error_output, user_context=""):
@@ -187,13 +187,17 @@ Please:
 3. Add a short explanation
 
 Be concise and practical."""
-
         return self.call_api(prompt)
     
     def call_api(self, prompt):
         """Call Claude API with the prompt."""
         client = Anthropic(api_key=self.api_key)
-        
+
+        if self.debug:
+            print("\n[CLIHelper DEBUG] Prompt being sent to LLM:\n")
+            print(prompt)
+            print("\n[CLIHelper DEBUG] End prompt\n")
+
         try:
             response = client.messages.create(
                 model="claude-3-haiku-20240307",
@@ -209,14 +213,21 @@ Be concise and practical."""
 
 def main():
     """Main entry point."""
-    helper = CLIHelper()
+    # Parse --debug flag and strip it from args
+    debug = False
+    args = sys.argv[1:]
+    if "--debug" in args:
+        debug = True
+        args = [a for a in args if a != "--debug"]
+
+    helper = CLIHelper(debug=debug)
     
     # Check if data is being piped in
     if sys.stdin.isatty():
         # No pipe - check for direct query arguments
-        if len(sys.argv) > 1:
+        if len(args) > 0:
             # Direct query mode
-            query = " ".join(sys.argv[1:])
+            query = " ".join(args)
             
             print("\n🔍 Analyzing your query with recent command context...")
             result = helper.analyze_direct_query(query)
@@ -234,6 +245,7 @@ def main():
             print("  clihelper 'what was that git command?'        # Ask about recent commands")
             print("  command_that_fails 2>&1 | clihelper           # Analyze error")
             print("  command_that_fails 2>&1 | clihelper 'context' # Analyze with context")
+            print("  clihelper --debug 'how do I find large files?' # Debug prompt to LLM")
             print("\nExamples:")
             print("  clihelper 'how to compress a directory'")
             print("  clihelper 'explain the last command'")
@@ -242,7 +254,7 @@ def main():
     
     # Piped mode - analyze error
     error_output = sys.stdin.read()
-    user_context = " ".join(sys.argv[1:]) if len(sys.argv) > 1 else ""
+    user_context = " ".join(args) if len(args) > 0 else ""
     
     # Get and display analysis
     result = helper.analyze_error(error_output, user_context)
