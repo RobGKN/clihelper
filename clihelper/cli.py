@@ -13,6 +13,7 @@ __version__ = "0.2.0"
 class CLIHelper:
     def __init__(self):
         self.api_key = self.get_or_setup_api_key()
+        self.ensure_prompt_command()
         
     def get_or_setup_api_key(self):
         """Get API key from file or prompt for it."""
@@ -36,6 +37,47 @@ class CLIHelper:
         key_file.chmod(0o600)
         print("✅ Key saved to ~/.clihelper_key\n")
         return key
+    
+    def ensure_prompt_command(self):
+        """Ask user if they want to enable live shell history syncing."""
+        marker = Path.home() / ".clihelper_prompt_command_configured"
+
+        # Only run once
+        if marker.exists():
+            return
+
+        # Only apply to bash
+        shell = os.getenv("SHELL", "")
+        if "bash" not in shell:
+            marker.write_text("skipped (non-bash shell)")
+            return
+
+        bashrc = Path.home() / ".bashrc"
+
+        print("\n📘 CLIHelper setup: Improve shell history detection\n")
+        print("CLIHelper can give MUCH better answers if Bash writes history")
+        print("after every command instead of only on logout.\n")
+        print("Would you like to enable this by adding the following line to ~/.bashrc?\n")
+        print("    export PROMPT_COMMAND=\"history -a\"\n")
+
+        choice = input("Enable this? [Y/n]: ").strip().lower()
+
+        if choice in ["", "y", "yes"]:
+            try:
+                with bashrc.open("a") as f:
+                    f.write("\n# Added by CLIHelper to sync shell history\n")
+                    f.write('export PROMPT_COMMAND="history -a"\n')
+
+                print("\n✅ Enabled! Bash will now sync history after each command.")
+                print("   You need to open a new terminal for this to take effect.\n")
+
+                marker.write_text("enabled")
+            except Exception as e:
+                print(f"⚠️ Could not modify ~/.bashrc: {e}")
+                marker.write_text("failed")
+        else:
+            print("\n❌ Skipped. CLIHelper will work, but may not detect recent commands.")
+            marker.write_text("skipped")
     
     def redact_sensitive_info(self, text):
         """Remove sensitive information from text."""
